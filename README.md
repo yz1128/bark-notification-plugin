@@ -2,7 +2,10 @@
 
 通过 iOS [Bark](https://bark.day.app/) 应用在 AI Agent 任务完成时发送推送通知。
 
-**双模式支持**：既可作为 Claude Code Skill 使用，也可作为 Python Plugin Hook 使用（如果你的框架支持）。
+**三种使用模式**：
+1. **Skill 模式**（推荐）：Claude Code skill，手动调用 `/bark-notify` 发送推送
+2. **Skill Hook 模式**（自动）：一键安装 SessionEnd hook，会话结束自动推送
+3. **Plugin Hook 模式**：Python hook 插件，LLM 响应后自动推送（需框架支持）
 
 ## 功能特性
 
@@ -12,10 +15,11 @@
 - 💾 自动管理会话缓存（防止内存泄漏）
 - 🎨 支持自定义提示音、分组、归档等参数
 - 📱 命令行独立使用，灵活调用
+- ⚡ 一键安装/卸载自动推送 hook
 
 ## 快速开始
 
-### 方式一：Claude Code Skill（推荐）
+### 方式一：Claude Code Skill（推荐 - 手动推送）
 
 **1. 安装 Skill**
 
@@ -82,9 +86,39 @@ https://api.day.app/your_device_key/test
 /bark-notify "PR 已创建" "请查看 #456" --url "https://github.com/user/repo/pull/456"
 ```
 
-**4. 启用自动推送（可选）**
+### 方式二：Skill Hook 模式（推荐 - 自动推送）⭐
 
-在 `~/.claude/settings.json` 中添加 hook 配置，实现会话结束时自动推送：
+**一键安装，会话结束自动推送！**
+
+**1. 安装 Skill**
+
+```bash
+# 创建符号链接
+ln -s ~/bark-notification-plugin/skill-hook ~/.claude/skills/bark-notify-hook
+```
+
+**2. 配置 Device Key**（同上）
+
+**3. 安装 Hook**
+
+在 Claude Code 中运行：
+
+```
+/bark-notify-hook install
+```
+
+**4. 完成！**
+
+现在每次对话结束时，会自动发送推送到你的 iPhone！
+
+**其他命令：**
+- `/bark-notify-hook uninstall` - 卸载自动推送
+- `/bark-notify-hook test` - 测试推送
+- `/bark-notify-hook status` - 查看状态
+
+**手动配置 Hook（可选）：**
+
+如果你想手动配置，在 `~/.claude/settings.json` 中添加：
 
 ```json
 {
@@ -94,7 +128,7 @@ https://api.day.app/your_device_key/test
         "hooks": [
           {
             "type": "command",
-            "command": "python ~/.claude/skills/bark-notify/hook.py"
+            "command": "python ~/.claude/skills/bark-notify-hook/hook.py"
           }
         ]
       }
@@ -103,9 +137,7 @@ https://api.day.app/your_device_key/test
 }
 ```
 
-配置后，每次对话结束时会自动发送 "Claude 任务完成" 推送到你的手机。
-
-### 方式二：Python Plugin Hook（高级）
+### 方式三：Python Plugin Hook（高级）
 
 **注意：此方式需要你的 Agent 框架支持 Python plugin hooks。Claude Code 目前不支持。**
 
@@ -203,14 +235,23 @@ payload = json.dumps({
 
 ```
 bark-notification-plugin/
-├── skill/                      # Claude Code Skill 文件
+├── skill/                      # Claude Code Skill（手动推送）
 │   ├── SKILL.md               # Skill 完整文档
 │   ├── README.md              # Skill 快速开始
 │   ├── bark_send.py           # 核心推送工具（可独立使用）
 │   ├── bark_notify_task.py    # 命令包装器
-│   └── run.py                 # Skill 入口点
-├── __init__.py                # Python Plugin Hook 实现
-├── plugin.yaml                # Plugin 元数据
+│   ├── run.py                 # Skill 入口点
+│   └── hook.py                # SessionEnd hook 脚本（手动配置用）
+├── skill-hook/                 # ⭐ Skill Hook 模式（自动推送）
+│   ├── SKILL.md               # 完整文档
+│   ├── README.md              # 快速开始
+│   ├── run.py                 # 安装/卸载/测试工具
+│   ├── hook.py                # SessionEnd hook 脚本
+│   └── bark_send.py           # 核心推送实现
+├── install.sh                  # Linux/macOS 安装脚本
+├── install.bat                 # Windows 安装脚本
+├── __init__.py                 # Python Plugin Hook 实现
+├── plugin.yaml                 # Plugin 元数据
 ├── barkApi.md                 # Bark API 完整文档
 ├── CLAUDE.md                  # 代码库文档（供 Claude Code 使用）
 └── README.md                  # 本文件
