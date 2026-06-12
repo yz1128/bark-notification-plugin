@@ -1,0 +1,5 @@
+name: bark-notify
+version: "1.0"
+description: "Send iOS Bark push notifications when sessions end"
+hooks:
+  - on_session_end
