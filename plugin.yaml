@@ -1,0 +1,8 @@
+name: bark-notify
+version: 1.0.0
+description: Send iOS push notifications via Bark when agent tasks complete
+requires_env:
+  - name: BARK_DEVICE_KEY
+    description: "Bark device key (from Bark app settings)"
+    url: "https://bark.day.app/"
+    secret: false
