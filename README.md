@@ -19,12 +19,12 @@
 
 ```bash
 # Linux/macOS
-git clone https://github.com/yz1128/bark-notification-plugin.git
-ln -s ~/bark-notification-plugin/skill-hook ~/.claude/skills/bark-notify-hook
+git clone https://github.com/yz1128/bark-notify-skill.git
+ln -s ~/bark-notify-skill/skill-hook ~/.claude/skills/bark-notify-hook
 
 # Windows (PowerShell 管理员权限)
-git clone https://github.com/yz1128/bark-notification-plugin.git
-New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\skills\bark-notify-hook" -Target "$env:USERPROFILE\bark-notification-plugin\skill-hook"
+git clone https://github.com/yz1128/bark-notify-skill.git
+New-Item -ItemType SymbolicLink -Path "$env:USERPROFILE\.claude\skills\bark-notify-hook" -Target "$env:USERPROFILE\bark-notify-skill\skill-hook"
 ```
 
 ### 2. 配置 Device Key
@@ -126,7 +126,7 @@ result = send_bark(
 ## 文件说明
 
 ```
-bark-notification-plugin/
+bark-notify-skill/
 ├── skill-hook/                 # ⭐ Skill Hook 模式（推荐使用）
 │   ├── SKILL.md               # 完整文档
 │   ├── README.md              # 快速开始
