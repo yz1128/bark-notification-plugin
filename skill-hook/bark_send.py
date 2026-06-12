@@ -60,8 +60,14 @@ def send_bark(device_key: str, title: str, body: str = "", **kwargs):
     if "badge" in kwargs:
         payload["badge"] = int(kwargs["badge"])
 
+    if "level" in kwargs:
+        payload["level"] = kwargs["level"]
+
+    # 支持 isArchive 和 is_archive 两种形式
     if "isArchive" in kwargs:
         payload["isArchive"] = int(kwargs["isArchive"])
+    elif "is_archive" in kwargs:
+        payload["isArchive"] = int(kwargs["is_archive"])
     else:
         payload["isArchive"] = 1  # 默认归档
 
