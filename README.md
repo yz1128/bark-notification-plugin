@@ -1,18 +1,50 @@
-# Bark Notification Plugin
+# Bark Notify Skill
 
 通过 iOS [Bark](https://bark.day.app/) 应用在 AI Agent 任务完成时发送推送通知。
 
+**双模式支持**：既可作为 Claude Code Skill 使用，也可作为 Python Plugin Hook 使用（如果你的框架支持）。
+
 ## 功能特性
 
-- 🔔 任务完成自动推送到 iPhone/iPad
-- 🎯 捕获 LLM 最终响应作为通知内容
+- 🔔 任务完成推送到 iPhone/iPad
+- 🎯 捕获 LLM 响应作为通知内容
 - 🧵 异步发送，不阻塞会话关闭
 - 💾 自动管理会话缓存（防止内存泄漏）
 - 🎨 支持自定义提示音、分组、归档等参数
+- 📱 命令行独立使用，灵活调用
 
 ## 快速开始
 
-### 1. 获取 Bark Device Key
+### 方式一：Claude Code Skill（推荐）
+
+**1. 安装 Skill**
+
+**自动安装（推荐）：**
+
+```bash
+# Linux/macOS
+git clone https://github.com/yz1128/bark-notification-plugin.git
+cd bark-notification-plugin
+./install.sh
+
+# Windows（PowerShell 或 CMD）
+git clone https://github.com/yz1128/bark-notification-plugin.git
+cd bark-notification-plugin
+install.bat
+```
+
+**手动安装：**
+
+```bash
+# 克隆到 Claude skills 目录
+git clone https://github.com/yz1128/bark-notification-plugin.git ~/.claude/skills/bark-notify
+
+# 或者创建符号链接（推荐，会随 git pull 自动更新）
+git clone https://github.com/yz1128/bark-notification-plugin.git ~/bark-notification-plugin
+ln -s ~/bark-notification-plugin/skill ~/.claude/skills/bark-notify
+```
+
+**2. 配置 Device Key**
 
 打开 Bark 应用，复制测试 URL 中的 key：
 
@@ -22,30 +54,104 @@ https://api.day.app/your_device_key/test
                     这就是你的 device key
 ```
 
-### 2. 配置环境变量
+在 `~/.claude/settings.json` 的 `env` 中添加：
+
+```json
+{
+  "env": {
+    "BARK_DEVICE_KEY": "your_device_key_here"
+  }
+}
+```
+
+**3. 使用 Skill**
+
+在 Claude Code 对话中：
+
+```bash
+# 发送简单通知
+/bark-notify "任务完成"
+
+# 发送带内容的通知
+/bark-notify "测试通过" "所有 127 个测试用例已通过"
+
+# 自定义分组和铃声
+/bark-notify "部署成功" "v2.1.0 已上线" --group deploy --sound bell
+
+# 带跳转链接
+/bark-notify "PR 已创建" "请查看 #456" --url "https://github.com/user/repo/pull/456"
+```
+
+### 方式二：Python Plugin Hook（高级）
+
+**注意：此方式需要你的 Agent 框架支持 Python plugin hooks。Claude Code 目前不支持。**
+
+**1. 安装插件**
+
+**1. 安装插件**
+
+将 `__init__.py` 和 `plugin.yaml` 复制到你的框架插件目录。
+
+**2. 配置环境变量**
 
 ```bash
 export BARK_DEVICE_KEY="your_device_key"
 ```
 
-### 3. 安装插件
+**3. Hook 说明**
 
-将插件文件复制到你的 Agent 框架的插件目录，插件会自动注册以下 hooks：
-- `post_llm_call` - 捕获响应
-- `on_session_end` - 发送通知
+插件会自动注册以下 hooks：
+- `post_llm_call` - 每次 LLM 响应后立即发送通知
+- `on_session_end` - （备用）会话结束时发送通知
+
+### 方式三：命令行直接使用
+
+```bash
+# 基本推送
+python skill/bark_send.py "标题" "内容"
+
+# 带参数
+python skill/bark_send.py "部署成功" "v2.1.0 已上线" --group deploy --sound bell
+
+# 包装命令（任务完成后自动推送）
+python skill/bark_notify_task.py npm test
+```
 
 ## 使用示例
 
+### Skill 模式示例
+
+### Skill 模式示例
+
+```
+用户: "帮我重构这个 auth 模块"
+AI: [执行重构...]
+AI: "重构完成，已更新 5 个文件，所有测试通过。"
+用户: "/bark-notify '重构完成' '已更新 5 个文件，所有测试通过'"
+→ 推送: "重构完成" / "已更新 5 个文件，所有测试通过"
+```
+
+### Plugin Hook 模式示例
+
 插件会在以下情况自动发送通知：
-- ✅ 任务成功完成（`completed=True`）
-- ✅ 未被中断（`interrupted=False`）
+- ✅ 每次 LLM 响应后立即推送
 - ✅ 已设置 `BARK_DEVICE_KEY`
 
 通知内容包括：
-- **标题**: 框架名称（如 "Hermes" 或 "Hermes (telegram)"）
-- **正文**: LLM 最终响应（前 200 字符）
+- **标题**: "Hermes" 或 "Hermes (platform)"
+- **正文**: LLM 响应（前 200 字符）
 
-## 配置
+### 命令行模式示例
+
+```bash
+# 包装测试命令
+python skill/bark_notify_task.py npm test
+→ 推送: "✅ 任务成功" / "npm test\n用时: 12秒"
+
+# 直接发送
+python skill/bark_send.py "编译完成" "Build successful"
+→ 推送: "编译完成" / "Build successful"
+```
 
 ### 环境要求
 
@@ -72,12 +178,20 @@ payload = json.dumps({
 
 ## 文件说明
 
-| 文件 | 说明 |
-|------|------|
-| `__init__.py` | 插件主文件（hook 注册、通知发送） |
-| `plugin.yaml` | 插件元数据（名称、版本、环境变量） |
-| `barkApi.md` | Bark API 完整文档 |
-| `CLAUDE.md` | 代码库文档（供 Claude Code 使用） |
+```
+bark-notification-plugin/
+├── skill/                      # Claude Code Skill 文件
+│   ├── SKILL.md               # Skill 完整文档
+│   ├── README.md              # Skill 快速开始
+│   ├── bark_send.py           # 核心推送工具（可独立使用）
+│   ├── bark_notify_task.py    # 命令包装器
+│   └── run.py                 # Skill 入口点
+├── __init__.py                # Python Plugin Hook 实现
+├── plugin.yaml                # Plugin 元数据
+├── barkApi.md                 # Bark API 完整文档
+├── CLAUDE.md                  # 代码库文档（供 Claude Code 使用）
+└── README.md                  # 本文件
+```
 
 ## 故障排查
 

@@ -4,119 +4,159 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-Bark 通知插件 - 通过 iOS Bark 应用在 AI Agent 任务完成时发送推送通知。
+Bark Notify - 通过 iOS Bark 应用在 AI Agent 任务完成时发送推送通知。
 
-**核心功能**: 捕获 LLM 响应内容，在会话成功结束时异步推送到用户的 iPhone/iPad。
+**双模式架构**：
+- **Skill 模式**（推荐）：Claude Code skill，手动调用 `/bark-notify` 发送推送
+- **Plugin Hook 模式**：Python hook 插件，LLM 响应后自动推送（需框架支持）
 
 ## 快速开始
 
-### 环境要求
-- Python 3.7+（使用 `OrderedDict`、类型注解）
-- 无第三方依赖（仅标准库）
+### 作为 Claude Code Skill 使用（推荐）
 
-### 配置
 ```bash
-# 必需：设置 Bark device key（从 Bark 应用中复制）
-export BARK_DEVICE_KEY="your_key_here"
+# 1. 安装
+ln -s ~/bark-notification-plugin/skill ~/.claude/skills/bark-notify
 
-# 验证插件加载
-# 启动时日志会显示: "bark-notify: registered (device_key set)"
+# 2. 配置 device key 在 ~/.claude/settings.json
+"BARK_DEVICE_KEY": "your_key_here"
+
+# 3. 使用
+/bark-notify "任务完成"
+/bark-notify "测试通过" "所有用例已通过" --group ci
 ```
 
-### 测试
-```bash
-# 手动测试通知发送
-python -c "
-from __init__ import _send_bark
-_send_bark('your_key', 'Test', 'Hello from Bark!')
-"
+### 作为 Plugin Hook 使用
 
-# 检查日志输出
-# 成功: "Bark notification sent: Test"
-# 失败: "Bark notification failed: <error>"
-```
+**注意：Claude Code 目前不支持 Python plugin hooks。**
+
+其他框架可以将 `__init__.py` 和 `plugin.yaml` 复制到插件目录。
 
 ## 架构说明
 
-### Hook 集成点
-插件注册两个 hook 到宿主 Agent 框架：
+### Skill 模式架构（skill/ 目录）
 
-- **`post_llm_call`** → 每次 LLM 响应后触发，存储响应文本
-- **`on_session_end`** → 会话结束时触发，根据状态决定是否发送
+```
+用户调用 /bark-notify
+    ↓
+run.py (Skill 入口)
+    ↓
+bark_send.send_bark()
+    ↓
+HTTP POST → https://api.day.app/{device_key}
+    ↓
+iPhone 收到推送
+```
 
-### 关键设计决策
+**核心文件**：
+- `skill/run.py` - Claude Code skill 入口，解析参数并调用发送函数
+- `skill/bark_send.py` - 推送核心实现，可独立使用
+- `skill/bark_notify_task.py` - 命令包装器，任务完成后自动推送
 
-| 问题 | 解决方案 | 位置 |
-|------|---------|------|
-| 并发会话的响应如何关联？ | 用 `session_id` 作 key 存储到 `OrderedDict` | `_store_response()` |
-| 如何防止内存泄漏？ | 限制缓存 50 条，超限驱逐最旧 | `_MAX_STORED = 50` |
-| 通知发送失败会阻塞会话吗？ | 不会，用 daemon 线程异步发送 | `threading.Thread(daemon=True)` |
-| 为什么截断 200 字符？ | iOS 通知预览限制 | `_on_session_end()` |
+### Plugin Hook 模式架构（根目录）
 
-### 发送条件
-仅在以下情况发送通知：
-1. `completed=True`（任务完成）
-2. `interrupted=False`（未被中断）
-3. `BARK_DEVICE_KEY` 已设置
+```
+post_llm_call → _store_response() → OrderedDict (限制 50 条)
+                                         ↓
+立即发送 → _send_bark() → Threading (daemon)
+```
 
-失败或中断的会话会清理缓存但不发送。
+**核心文件**：
+- `__init__.py` - Hook 注册和实现
+- `plugin.yaml` - Plugin 元数据
 
 ## 修改指南
 
-### 调整通知参数
-编辑 `_send_bark()` 的 payload：
+### Skill 模式：调整推送参数
+
+编辑 `skill/bark_send.py` 的 `send_bark()` 函数：
+
 ```python
-payload = json.dumps({
+payload = {
     "title": title,
-    "body": body,
-    "group": "hermes",      # 修改分组名
-    "sound": "minuet",      # 更换提示音（参考 barkApi.md）
-    "isArchive": 1,         # 是否归档
-    "level": "active",      # 可选: critical/timeSensitive/passive
-    "badge": 1,             # 可选: 角标数字
-})
+    "body": body or "✅ 任务已完成",
+    "group": "claude",        # 修改默认分组
+    "sound": "minuet",        # 修改默认铃声
+    "isArchive": 1,           # 是否归档
+}
+
+# 可选参数
+if "level" in kwargs:         # critical/active/timeSensitive/passive
+    payload["level"] = kwargs["level"]
+if "badge" in kwargs:         # 角标数字
+    payload["badge"] = kwargs["badge"]
 ```
 
-完整参数列表见 `barkApi.md` 的 "Request Parameters" 章节。
+### Plugin Hook 模式：调整触发条件
 
-### 修改发送条件
-编辑 `_on_session_end()` 的判断逻辑：
-```python
-# 示例：即使中断也发送（通知失败）
-if not completed:
-    _send_bark(device_key, f"{title} [Failed]", "任务未完成")
-    return
-```
+编辑 `__init__.py` 的 `_on_post_llm_call()` 函数：
 
-### 调整截断长度
-修改 `_on_session_end()` 中的截断逻辑：
 ```python
-if len(body) > 200:  # 改为其他值
-    body = body[:197] + "..."
+# 当前：每次 LLM 响应后立即发送
+def _on_post_llm_call(...):
+    # 立即发送通知
+    thread = threading.Thread(target=_send_bark, ...)
+    thread.start()
+
+# 修改为：仅在特定条件下发送
+def _on_post_llm_call(...):
+    # 示例：仅在响应超过 100 字时发送
+    if len(assistant_response) > 100:
+        thread = threading.Thread(target=_send_bark, ...)
+        thread.start()
 ```
 
 ## 故障排查
 
 | 症状 | 可能原因 | 解决方法 |
 |------|---------|---------|
-| 没有收到通知 | `BARK_DEVICE_KEY` 未设置 | 检查启动日志是否显示 "NOT SET" |
-| 通知内容为空 | `post_llm_call` 未触发 | 检查宿主框架的 hook 注册是否成功 |
-| 网络错误日志 | Bark API 不可达 | 检查网络连接，确认 `api.day.app` 可访问 |
-| 通知延迟 | 线程调度延迟 | 正常现象（daemon 线程 + 10s 超时） |
+| Skill 调用无响应 | BARK_DEVICE_KEY 未设置 | 检查 ~/.claude/settings.json 的 env 配置 |
+| 推送未收到 | 网络问题或 device key 错误 | 运行 `python skill/bark_send.py "测试" "测试"` |
+| 命令行乱码 | Windows 编码问题 | bark_send.py 已处理 UTF-8 编码 |
+| Plugin hook 不触发 | 框架不支持 Python hooks | 使用 Skill 模式代替 |
+
+## 测试
+
+### 测试 Skill 模式
+```bash
+cd ~/bark-notification-plugin/skill
+python bark_send.py "测试推送" "这是测试消息"
+```
+
+### 测试 Plugin Hook 模式
+```bash
+cd ~/bark-notification-plugin
+python -c "
+import os
+os.environ['BARK_DEVICE_KEY'] = 'your_key'
+from __init__ import _send_bark
+_send_bark('your_key', 'Hook 测试', 'Plugin hook 工作正常')
+"
+```
 
 ## 代码结构
 
+### Skill 模式（skill/ 目录）
 ```
-__init__.py          # 插件主文件
-├── register()       # 框架调用的注册入口
-├── _on_post_llm_call()   # Hook: 捕获响应
-├── _on_session_end()     # Hook: 发送通知
-├── _send_bark()          # 核心: HTTP POST 到 Bark API
-├── _store_response()     # 缓存管理: 存储
-└── _pop_response()       # 缓存管理: 取出删除
+skill/
+├── run.py                    # Skill 入口
+├── bark_send.py             # 核心：send_bark() 函数
+├── bark_notify_task.py      # 包装器：执行命令后推送
+├── SKILL.md                 # 完整文档
+└── README.md                # 快速开始
+```
 
-plugin.yaml          # 插件元数据（名称、版本、环境变量）
-barkApi.md           # Bark API 完整文档（参数、示例、MCP 配置）
+### Plugin Hook 模式（根目录）
+```
+__init__.py                   # Hook 实现
+├── register()               # 框架调用的注册入口
+├── _on_post_llm_call()      # Hook: 每次响应后发送
+├── _send_bark()             # 核心: HTTP POST 到 Bark API
+├── _store_response()        # 缓存管理: 存储
+└── _pop_response()          # 缓存管理: 取出删除
+
+plugin.yaml                   # 插件元数据
+barkApi.md                    # Bark API 完整文档
 ```
 
 ## 相关资源
