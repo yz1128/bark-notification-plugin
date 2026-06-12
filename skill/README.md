@@ -14,19 +14,42 @@ Bark notify skill 已成功创建在 `~/.claude/skills/bark-notify/`
 /bark-notify "任务完成"
 ```
 
-### 2. 带内容的推送
+### 2. 自动推送（SessionEnd Hook）⭐ 推荐
+
+在 `~/.claude/settings.json` 中配置 hook，实现会话结束时自动推送：
+
+```json
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python ~/.claude/skills/bark-notify/hook.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+配置后，每次对话结束时会自动发送 "Claude 任务完成" 推送到你的手机，无需手动调用。
+
+### 3. 带内容的推送
 
 ```
 /bark-notify "测试通过" "所有 127 个测试用例已通过"
 ```
 
-### 3. 自定义分组和铃声
+### 4. 自定义分组和铃声
 
 ```
 /bark-notify "部署成功" "v2.1.0 已上线到生产环境" --group deploy --sound bell
 ```
 
-### 4. 带跳转链接
+### 5. 带跳转链接
 
 ```
 /bark-notify "PR 已创建" "请查看 #456" --url "https://github.com/user/repo/pull/456"
@@ -75,6 +98,7 @@ python bark_send.py "测试推送" "Bark notify skill 已就绪"
 - `bark_send.py` - 核心推送功能（可独立使用）
 - `bark_notify_task.py` - 命令包装器，执行完命令后自动推送
 - `run.py` - Skill 入口点，供 Claude Code 调用
+- `hook.py` - SessionEnd hook 脚本，用于自动推送
 - `README.md` - 本文件
 
 ## 下一步

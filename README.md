@@ -82,6 +82,29 @@ https://api.day.app/your_device_key/test
 /bark-notify "PR 已创建" "请查看 #456" --url "https://github.com/user/repo/pull/456"
 ```
 
+**4. 启用自动推送（可选）**
+
+在 `~/.claude/settings.json` 中添加 hook 配置，实现会话结束时自动推送：
+
+```json
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python ~/.claude/skills/bark-notify/hook.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+配置后，每次对话结束时会自动发送 "Claude 任务完成" 推送到你的手机。
+
 ### 方式二：Python Plugin Hook（高级）
 
 **注意：此方式需要你的 Agent 框架支持 Python plugin hooks。Claude Code 目前不支持。**
