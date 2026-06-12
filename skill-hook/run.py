@@ -23,6 +23,23 @@ SKILL_DIR = os.path.dirname(os.path.abspath(__file__))
 SETTINGS_FILE = os.path.expanduser("~/.claude/settings.json")
 HOOK_SESSION_END = "python ~/.claude/skills/bark-notify-hook/hook.py"
 HOOK_PERMISSION = "python ~/.claude/skills/bark-notify-hook/hook_permission.py"
+HOOK_USER_INPUT = "python ~/.claude/skills/bark-notify-hook/hook_user_input.py"
+
+# 所有需要安装的 hooks
+HOOKS_CONFIG = {
+    "SessionEnd": {
+        "command": HOOK_SESSION_END,
+        "description": "会话结束"
+    },
+    "PermissionRequest": {
+        "command": HOOK_PERMISSION,
+        "description": "权限请求"
+    },
+    "Elicitation": {
+        "command": HOOK_USER_INPUT,
+        "description": "用户输入请求"
+    }
+}
 
 
 def backup_settings():
@@ -63,35 +80,33 @@ def save_settings(settings):
 
 
 def is_hook_installed(settings):
-    """检查 hook 是否已安装"""
+    """检查所有 hooks 是否已安装"""
     if not settings or 'hooks' not in settings:
-        return False, False
+        return
 
     hooks = settings.get('hooks', {})
+    installed = {}
 
-    # 检查 SessionEnd hook
-    session_end_installed = False
-    session_end = hooks.get('SessionEnd', [])
-    for item in session_end:
-        for hook in item.get('hooks', []):
-            if hook.get('command') == HOOK_SESSION_END:
-                session_end_installed = True
+    for hook_event, hook_config in HOOKS_CONFIG.items():
+        hook_command = hook_config["command"]
+        is_installed = False
+
+        event_hooks = hooks.get(hook_event, [])
+        for item in event_hooks:
+            for hook in item.get('hooks', []):
+                if hook.get('command') == hook_command:
+                    is_installed = True
+                    break
+            if is_installed:
                 break
 
-    # 检查 PermissionRequest hook
-    permission_installed = False
-    permission_request = hooks.get('PermissionRequest', [])
-    for item in permission_request:
-        for hook in item.get('hooks', []):
-            if hook.get('command') == HOOK_PERMISSION:
-                permission_installed = True
-                break
+        installed[hook_event] = is_installed
 
-    return session_end_installed, permission_installed
+    return installed
 
 
 def install_hook():
-    """安装 SessionEnd 和 PermissionRequest hooks"""
+    """安装所有交互相关的 hooks"""
     print("📦 正在安装 Bark Notify Hooks...")
     print("")
 
@@ -104,44 +119,35 @@ def install_hook():
         return False
 
     # 检查是否已安装
-    session_end_installed, permission_installed = is_hook_installed(settings)
-    if session_end_installed and permission_installed:
-        print("⚠️  Hooks 已经安装，无需重复安装")
+    installed = is_hook_installed(settings)
+    if not installed:
+        print("❌ 无法读取配置状态")
+        return False
+
+    all_installed = all(installed.values())
+    if all_installed:
+        print("⚠️  所有 Hooks 已安装，无需重复安装")
         return True
 
     # 添加 hooks
     if 'hooks' not in settings:
         settings['hooks'] = {}
 
-    # 安装 SessionEnd hook
-    if not session_end_installed:
-        if 'SessionEnd' not in settings['hooks']:
-            settings['hooks']['SessionEnd'] = []
+    # 遍历安装每个 hook
+    for hook_event, hook_config in HOOKS_CONFIG.items():
+        if not installed[hook_event]:
+            if hook_event not in settings['hooks']:
+                settings['hooks'][hook_event] = []
 
-        settings['hooks']['SessionEnd'].append({
-            "hooks": [
-                {
-                    "type": "command",
-                    "command": HOOK_SESSION_END
-                }
-            ]
-        })
-        print("✅ SessionEnd hook 已添加")
-
-    # 安装 PermissionRequest hook
-    if not permission_installed:
-        if 'PermissionRequest' not in settings['hooks']:
-            settings['hooks']['PermissionRequest'] = []
-
-        settings['hooks']['PermissionRequest'].append({
-            "hooks": [
-                {
-                    "type": "command",
-                    "command": HOOK_PERMISSION
-                }
-            ]
-        })
-        print("✅ PermissionRequest hook 已添加")
+            settings['hooks'][hook_event].append({
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": hook_config["command"]
+                    }
+                ]
+            })
+            print(f"✅ {hook_event} ({hook_config['description']}) hook 已添加")
 
     # 保存
     if save_settings(settings):
@@ -150,7 +156,8 @@ def install_hook():
         print("")
         print("功能说明：")
         print("  📱 会话结束时 → 自动发送完成通知")
-        print("  ⚠️  权限请求时 → 自动提醒需要确认")
+        print("  ⚠️  权限请求时 → 紧急提醒需要确认")
+        print("  💬 需要输入时 → 提醒返回终端回答")
         print("")
         print("下一步：")
         print("  1. 确保已配置 BARK_DEVICE_KEY")
@@ -161,7 +168,7 @@ def install_hook():
 
 
 def uninstall_hook():
-    """卸载 SessionEnd 和 PermissionRequest hooks"""
+    """卸载所有 hooks"""
     print("🗑️  正在卸载 Bark Notify Hooks...")
     print("")
 
@@ -174,48 +181,35 @@ def uninstall_hook():
         return False
 
     # 检查是否已安装
-    session_end_installed, permission_installed = is_hook_installed(settings)
-    if not session_end_installed and not permission_installed:
+    installed = is_hook_installed(settings)
+    if not installed:
+        print("❌ 无法读取配置状态")
+        return False
+
+    any_installed = any(installed.values())
+    if not any_installed:
         print("⚠️  Hooks 未安装，无需卸载")
         return True
 
-    # 移除 SessionEnd hook
-    if session_end_installed and 'hooks' in settings and 'SessionEnd' in settings['hooks']:
-        new_session_end = []
-        for item in settings['hooks']['SessionEnd']:
+    # 遍历移除每个 hook
+    for hook_event, hook_config in HOOKS_CONFIG.items():
+        if installed[hook_event] and 'hooks' in settings and hook_event in settings['hooks']:
             new_hooks = []
-            for hook in item.get('hooks', []):
-                if hook.get('command') != HOOK_SESSION_END:
-                    new_hooks.append(hook)
+            for item in settings['hooks'][hook_event]:
+                item_hooks = []
+                for hook in item.get('hooks', []):
+                    if hook.get('command') != hook_config["command"]:
+                        item_hooks.append(hook)
+
+                if item_hooks:
+                    item['hooks'] = item_hooks
+                    new_hooks.append(item)
 
             if new_hooks:
-                item['hooks'] = new_hooks
-                new_session_end.append(item)
-
-        if new_session_end:
-            settings['hooks']['SessionEnd'] = new_session_end
-        else:
-            del settings['hooks']['SessionEnd']
-        print("✅ SessionEnd hook 已移除")
-
-    # 移除 PermissionRequest hook
-    if permission_installed and 'hooks' in settings and 'PermissionRequest' in settings['hooks']:
-        new_permission = []
-        for item in settings['hooks']['PermissionRequest']:
-            new_hooks = []
-            for hook in item.get('hooks', []):
-                if hook.get('command') != HOOK_PERMISSION:
-                    new_hooks.append(hook)
-
-            if new_hooks:
-                item['hooks'] = new_hooks
-                new_permission.append(item)
-
-        if new_permission:
-            settings['hooks']['PermissionRequest'] = new_permission
-        else:
-            del settings['hooks']['PermissionRequest']
-        print("✅ PermissionRequest hook 已移除")
+                settings['hooks'][hook_event] = new_hooks
+            else:
+                del settings['hooks'][hook_event]
+            print(f"✅ {hook_event} ({hook_config['description']}) hook 已移除")
 
     # 如果 hooks 为空，删除整个 hooks 字段
     if 'hooks' in settings and not settings['hooks']:
@@ -226,7 +220,7 @@ def uninstall_hook():
         print("")
         print("✅ Hooks 卸载成功！")
         print("")
-        print("对话结束和权限请求时不再自动推送通知")
+        print("所有自动推送通知已停止")
         return True
 
     return False
@@ -289,11 +283,16 @@ def show_status():
         print("❌ 无法读取配置文件")
         return
 
-    session_end_installed, permission_installed = is_hook_installed(settings)
+    installed = is_hook_installed(settings)
+    if not installed:
+        print("❌ 无法读取配置状态")
+        return
 
     print("Hook 状态:")
-    print(f"  SessionEnd (会话结束): {'✅ 已安装' if session_end_installed else '❌ 未安装'}")
-    print(f"  PermissionRequest (权限请求): {'✅ 已安装' if permission_installed else '❌ 未安装'}")
+    for hook_event, hook_config in HOOKS_CONFIG.items():
+        is_installed = installed[hook_event]
+        status = "✅ 已安装" if is_installed else "❌ 未安装"
+        print(f"  {hook_event} ({hook_config['description']}): {status}")
 
     # Device Key 状态
     device_key = os.environ.get("BARK_DEVICE_KEY")
@@ -307,13 +306,15 @@ def show_status():
     print("Hook 脚本:")
     print("  - " + os.path.join(SKILL_DIR, "hook.py"))
     print("  - " + os.path.join(SKILL_DIR, "hook_permission.py"))
+    print("  - " + os.path.join(SKILL_DIR, "hook_user_input.py"))
     print("")
 
-    all_installed = session_end_installed and permission_installed
+    all_installed = all(installed.values())
     if all_installed and device_key:
         print("✅ 一切就绪！")
         print("   📱 会话结束时 → 自动推送")
-        print("   ⚠️  权限请求时 → 自动提醒")
+        print("   ⚠️  权限请求时 → 紧急提醒")
+        print("   💬 需要输入时 → 提醒返回")
     elif all_installed and not device_key:
         print("⚠️  Hooks 已安装，但需要配置 BARK_DEVICE_KEY")
     elif not all_installed and device_key:
@@ -330,8 +331,8 @@ def main():
         print("📱 Bark Notify Hook - 自动推送通知")
         print("")
         print("用法:")
-        print("  /bark-notify-hook install   - 安装 hooks（会话结束 + 权限请求）")
-        print("  /bark-notify-hook uninstall - 卸载 hooks")
+        print("  /bark-notify-hook install   - 安装所有 hooks（会话结束 + 权限请求 + 用户输入）")
+        print("  /bark-notify-hook uninstall - 卸载所有 hooks")
         print("  /bark-notify-hook test      - 测试推送")
         print("  /bark-notify-hook status    - 查看状态")
         print("")

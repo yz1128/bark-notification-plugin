@@ -7,8 +7,9 @@
 ## 功能特性
 
 - 🔔 会话结束时自动推送到 iPhone/iPad
-- ⚠️ 权限请求时自动提醒（需要你的确认时）
-- ⚡ 一键安装/卸载 hooks
+- ⚠️ 权限请求时紧急提醒（需要你确认时）
+- 💬 需要输入时提醒返回（Claude 等待你回答时）
+- ⚡ 一键安装/卸载所有 hooks
 - 🎯 智能状态检测
 - 🎨 支持自定义提示音、分组、归档
 - 🧹 完全卸载，不留残留
@@ -60,11 +61,12 @@ https://api.day.app/your_device_key/test
 现在会自动推送：
 - 📱 **会话结束时** → "Claude 任务完成"
 - ⚠️ **权限请求时** → "需要你的确认" (紧急提醒)
+- 💬 **需要输入时** → "需要回答" (提醒返回终端)
 
 ## 命令
 
-- `/bark-notify-hook install` - 安装 hooks（会话结束 + 权限请求）
-- `/bark-notify-hook uninstall` - 卸载 hooks
+- `/bark-notify-hook install` - 安装所有 hooks（会话结束 + 权限请求 + 用户输入）
+- `/bark-notify-hook uninstall` - 卸载所有 hooks
 - `/bark-notify-hook test` - 测试推送
 - `/bark-notify-hook status` - 查看状态
 
@@ -80,6 +82,13 @@ https://api.day.app/your_device_key/test
 - Claude 需要权限确认时自动触发
 - 发送标题："⚠️ [项目名] 需要确认"
 - 铃声：紧急的 alarm
+- 优先级：时效性通知
+- 不归档（需要立即处理）
+
+**用户输入推送（Elicitation Hook）：**
+- Claude 等待你回答问题时自动触发
+- 发送标题："💬 [项目名] 需要回答"
+- 铃声：清脆的 bell
 - 优先级：时效性通知
 - 不归档（需要立即处理）
 
@@ -133,6 +142,7 @@ bark-notify-skill/
 │   ├── run.py                 # 安装/卸载/测试工具
 │   ├── hook.py                # SessionEnd hook 脚本
 │   ├── hook_permission.py     # PermissionRequest hook 脚本
+│   ├── hook_user_input.py     # Elicitation hook 脚本
 │   └── bark_send.py           # 核心推送实现
 ├── skill/                      # 手动推送模式（已废弃）
 ├── __init__.py                 # Python Plugin Hook（已废弃）
@@ -166,6 +176,9 @@ bark-notify-skill/
    
    # 测试权限请求 hook
    echo '{"tool_name":"Edit","cwd":"/home/user/project"}' | python ~/.claude/skills/bark-notify-hook/hook_permission.py
+   
+   # 测试用户输入 hook
+   echo '{"question":"你想继续吗？","cwd":"/home/user/project"}' | python ~/.claude/skills/bark-notify-hook/hook_user_input.py
    ```
 
 ### Hooks 未触发？
@@ -207,6 +220,16 @@ if tool_name not in ["Edit", "Write", "Bash"]:
           {
             "type": "command",
             "command": "python ~/.claude/skills/bark-notify-hook/hook_permission.py"
+          }
+        ]
+      }
+    ],
+    "Elicitation": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python ~/.claude/skills/bark-notify-hook/hook_user_input.py"
           }
         ]
       }
