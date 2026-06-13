@@ -10,7 +10,7 @@ import sys
 import json
 
 # 获取 skill 目录
-SKILL_DIR = os.path.expanduser("~/.claude/skills/bark-notify")
+SKILL_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SKILL_DIR)
 
 try:
