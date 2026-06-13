@@ -1,6 +1,11 @@
 ---
 name: bark-notify-hook
-description: Automatically send iOS Bark push notifications when Claude completes responses. Auto-installs Stop hook on first use.
+description: |
+  通过 iOS Bark 应用在 Claude Code / Hermes Agent 完成回复、请求权限或等待输入时自动发送推送通知到 iPhone/iPad。支持三种触发场景：Stop hook（任务完成）、PermissionRequest hook（权限请求）、Elicitation hook（用户输入）。安装后无需手动调用，每次会话结束时自动推送。
+  
+  触发词：bark推送、bark通知、自动推送、会话结束通知、bark-notify-hook、iOS推送、手机提醒
+  
+  何时使用：希望在 Claude 完成任务后收到手机提醒时；不想盯着终端等待长时间任务完成时；需要及时响应权限请求时。
 ---
 
 # Bark Notify Hook - 自动推送通知
