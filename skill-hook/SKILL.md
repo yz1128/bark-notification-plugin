@@ -304,7 +304,62 @@ result = send_bark(
 
 - 确认 settings.json 中 hook 配置正确
 - 重启 Claude Code
-- 检查 hook.py 脚本是否存在且有执行权限
+- 检查 hook_stop.py 脚本是否存在且有执行权限
+
+## 常见错误与避免方法
+
+### ❌ 不要：重复执行 install 命令
+
+**为什么：** 会在 settings.json 中创建重复的 hook 配置，导致每次推送多条通知
+
+**正确做法：** 先运行 `/bark-notify-hook status` 检查是否已安装，如已安装则无需重复
+
+---
+
+### ❌ 不要：直接复制粘贴示例中的 BARK_DEVICE_KEY
+
+**为什么：** `your_device_key_here` 不是真实的 key，会导致推送失败
+
+**正确做法：** 从 Bark App 获取你自己的 device key（打开 App → 复制 URL 中的唯一标识）
+
+---
+
+### ❌ 不要：修改 hook 脚本后不重启
+
+**为什么：** Claude Code 在启动时读取 settings.json，运行时不会重新加载
+
+**正确做法：** 修改任何配置或脚本后，必须完全退出并重启 Claude Code
+
+---
+
+### ❌ 不要：删除 skill 目录但不卸载 hook
+
+**为什么：** settings.json 中仍然引用已删除的脚本路径，每次触发会报错
+
+**正确做法：** 先运行 `/bark-notify-hook uninstall` 清理配置，再删除目录
+
+---
+
+### ❌ 不要：在 BARK_DEVICE_KEY 中包含完整 URL
+
+**为什么：** 只需要 key 部分，不需要 `https://api.day.app/` 前缀
+
+**正确做法：**
+```json
+// ❌ 错误
+"BARK_DEVICE_KEY": "https://api.day.app/ABC123/test"
+
+// ✅ 正确
+"BARK_DEVICE_KEY": "ABC123"
+```
+
+---
+
+### ❌ 不要：在没有 Python 3 环境时安装
+
+**为什么：** hook 脚本依赖 Python 3，没有 Python 会静默失败
+
+**正确做法：** 先确认 `python --version` 或 `python3 --version` 可用且版本 ≥ 3.7
 
 ## 与 bark-notify skill 的区别
 
