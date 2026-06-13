@@ -392,8 +392,9 @@ cat ~/.claude/settings.json | grep -A 20 '"hooks"'
 ## 相关资源
 
 - Bark 官网: https://bark.day.app/
-- GitHub 项目: https://github.com/yz1128/bark-notification-plugin
-- 手动版 skill: bark-notify
+- Bark API 文档: https://bark.day.app/#/api
+- GitHub 项目: https://github.com/yz1128/bark-notify-skill
+- 项目文档: [README.md](README.md) | [CLAUDE.md](CLAUDE.md)
 
 ## License
 
