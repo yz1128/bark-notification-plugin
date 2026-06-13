@@ -60,12 +60,10 @@ def main():
             is_archive=0,           # 不归档，需要立即处理
             icon="https://cdn.jsdelivr.net/gh/yz1128/MyImageRepository@main/image/20260613092240368.png"
         )
-        if result.get("code") == 200:
-            sys.exit(0)
-        else:
-            sys.exit(1)
+        # 无论成功失败都静默退出
+        sys.exit(0)
     except Exception:
-        sys.exit(1)
+        sys.exit(0)
 
 
 if __name__ == "__main__":

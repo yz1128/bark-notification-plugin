@@ -71,15 +71,11 @@ def main():
             is_archive=1,
             icon="https://cdn.jsdelivr.net/gh/yz1128/MyImageRepository@main/image/20260613092240368.png"
         )
-        if result.get("code") == 200:
-            # 成功，静默
-            sys.exit(0)
-        else:
-            # 失败，静默
-            sys.exit(1)
+        # 无论成功失败都静默退出，不影响 Claude 正常工作
+        sys.exit(0)
     except Exception:
-        # 失败，静默
-        sys.exit(1)
+        # 失败也静默退出
+        sys.exit(0)
 
 
 if __name__ == "__main__":
