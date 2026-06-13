@@ -9,10 +9,54 @@ description: Automatically send iOS Bark push notifications when Claude complete
 
 在 Claude Code 完成回复时**自动**发送 Bark 推送通知到你的 iPhone/iPad，无需手动调用。
 
+## 推送格式
+
+所有推送使用统一格式，便于识别：
+
+**标题**：`Claude Code`
+
+**内容**：
+- 🆔 Session ID
+- 状态标识（任务完成/权限请求/等待输入）
+- 附加信息（如工具名称、问题内容等）
+
+**示例 - 任务完成**：
+```
+标题: Claude Code
+
+内容:
+🆔 c4a38421-8dee-422c-b849-9b0de4544e08
+✅ 任务完成
+```
+
+**示例 - 权限请求**：
+```
+标题: Claude Code
+
+内容:
+🆔 c4a38421-8dee-422c-b849-9b0de4544e08
+⚠️ 权限请求
+
+操作: PowerShell
+```
+
+**示例 - 等待输入**：
+```
+标题: Claude Code
+
+内容:
+🆔 c4a38421-8dee-422c-b849-9b0de4544e08
+💬 等待输入
+
+Which option do you prefer?
+```
+
 ## 功能特性
 
 - 🔔 每次 Claude 回复完成时自动推送到 iPhone/iPad
-- 🎯 零配置，首次使用自动安装 hook
+- 📱 三种场景智能推送：任务完成、权限请求、等待输入
+- 🎯 统一格式，包含 Session ID 便于追踪
+- 🖼️ 自带 Claude 图标，识别度高
 - 🔧 支持自定义标题、分组、铃声
 - 🧹 一键卸载，干净删除所有配置
 
@@ -109,21 +153,40 @@ description: Automatically send iOS Bark push notifications when Claude complete
 
 ## 自定义配置
 
-### 修改推送标题
+### 修改推送格式
 
-编辑 `~/.claude/skills/bark-notify-hook/hook.py`：
+编辑对应的 hook 脚本来修改推送格式：
 
+**hook.py（任务完成）**：
 ```python
-# 默认标题
-title = "Claude 任务完成"
+# 标题（默认：Claude Code）
+title = "Claude Code"
 
-# 修改为自定义标题
-title = "AI 助手已完成工作"
+# 内容格式
+body = f"🆔 {session_id}\n✅ 任务完成"
+```
+
+**hook_permission.py（权限请求）**：
+```python
+# 标题
+title = "Claude Code"
+
+# 内容格式
+body = f"🆔 {session_id}\n⚠️ 权限请求\n\n操作: {tool_name}"
+```
+
+**hook_user_input.py（等待输入）**：
+```python
+# 标题
+title = "Claude Code"
+
+# 内容格式
+body = f"🆔 {session_id}\n💬 等待输入\n\n{question[:100]}"
 ```
 
 ### 修改分组、铃声和图标
 
-编辑 hook.py 中的 `send_bark` 调用：
+编辑任意 hook 脚本中的 `send_bark` 调用：
 
 ```python
 result = send_bark(
@@ -137,25 +200,40 @@ result = send_bark(
 ```
 
 **常用铃声：**
-- `minuet` - 默认，轻柔
-- `bell` - 清脆，适合重要通知
-- `alarm` - 紧急，适合错误通知
+- `minuet` - 默认，轻柔（用于任务完成）
+- `bell` - 清脆，适合提醒（用于等待输入）
+- `alarm` - 紧急，适合警告（用于权限请求）
 - `chime` - 柔和提醒
 
 **常用分组：**
 - `claude` - 默认，AI 对话通知
+- `claude-permission` - 权限请求
+- `claude-input` - 用户输入请求
 - `work` - 工作相关
 - `personal` - 个人事务
 
 **图标：**
-- 默认使用 Claude 官方图标
+- 默认使用 Claude 官方图标（jsdelivr CDN）
 - 可以替换为任何公开的图片 URL
 
 ## 工作原理
 
-1. **安装时**：在 `~/.claude/settings.json` 中添加 `hooks.Stop` 配置
-2. **回复完成时**：Claude Code 在主代理完成响应时自动执行 `hook.py` 脚本
-3. **推送发送**：脚本调用 Bark API 发送推送到你的设备
+1. **安装时**：在 `~/.claude/settings.json` 中添加三个 hook 配置
+   - `hooks.Stop` - 任务完成时触发
+   - `hooks.PermissionRequest` - 权限请求时触发
+   - `hooks.Elicitation` - 等待用户输入时触发
+
+2. **触发时机**：
+   - **Stop** - Claude 主代理完成响应时
+   - **PermissionRequest** - 需要用户确认权限时
+   - **Elicitation** - 需要用户回答问题时
+
+3. **推送发送**：对应的 hook 脚本调用 Bark API 发送推送
+
+**推送特性**：
+- **任务完成** - 轻柔铃声（`minuet`），自动归档
+- **权限请求** - 紧急铃声（`alarm`），时效性通知，不归档
+- **等待输入** - 清脆铃声（`bell`），时效性通知，不归档
 
 ## Hook 配置示例
 
@@ -170,6 +248,26 @@ result = send_bark(
           {
             "type": "command",
             "command": "python ~/.claude/skills/bark-notify-hook/hook.py"
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python ~/.claude/skills/bark-notify-hook/hook_permission.py"
+          }
+        ]
+      }
+    ],
+    "Elicitation": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python ~/.claude/skills/bark-notify-hook/hook_user_input.py"
           }
         ]
       }
