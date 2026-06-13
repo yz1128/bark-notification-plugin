@@ -63,7 +63,7 @@ ln -s bark-notification-plugin/skill-hook bark-notify-hook
 
 ## 自定义
 
-编辑 `hook.py` 修改推送标题、分组或铃声：
+编辑 `hook.py` 修改推送标题、分组、铃声或图标：
 
 ```python
 title = "自定义标题"  # 修改标题
@@ -73,9 +73,16 @@ result = send_bark(
     title, 
     body, 
     group="custom",      # 修改分组
-    sound="bell"         # 修改铃声
+    sound="bell",        # 修改铃声
+    icon="图标URL"       # 修改图标
 )
 ```
+
+**常用铃声：**
+- `minuet` - 默认，轻柔
+- `bell` - 清脆
+- `alarm` - 紧急
+- `chime` - 柔和
 
 ## 与 bark-notify 的区别
 

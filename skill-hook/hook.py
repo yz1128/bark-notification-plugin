@@ -58,7 +58,8 @@ def main():
             body,
             group="claude",
             sound="minuet",
-            is_archive=1
+            is_archive=1,
+            icon="https://cdn.jsdelivr.net/gh/yz1128/MyImageRepository@main/image/20260613092240368.png"
         )
         if result.get("code") == 200:
             # 成功，静默

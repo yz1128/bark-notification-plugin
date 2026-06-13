@@ -121,7 +121,7 @@ title = "Claude 任务完成"
 title = "AI 助手已完成工作"
 ```
 
-### 修改分组和铃声
+### 修改分组、铃声和图标
 
 编辑 hook.py 中的 `send_bark` 调用：
 
@@ -131,7 +131,8 @@ result = send_bark(
     title, 
     body, 
     group="claude",      # 修改分组
-    sound="minuet"       # 修改铃声
+    sound="minuet",      # 修改铃声
+    icon="图标URL"       # 修改图标
 )
 ```
 
@@ -145,6 +146,10 @@ result = send_bark(
 - `claude` - 默认，AI 对话通知
 - `work` - 工作相关
 - `personal` - 个人事务
+
+**图标：**
+- 默认使用 Claude 官方图标
+- 可以替换为任何公开的图片 URL
 
 ## 工作原理
 

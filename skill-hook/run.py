@@ -254,7 +254,8 @@ def test_notification():
             "Bark Notify Hook 测试",
             "✅ Hook 工作正常！推送功能已就绪。",
             group="claude",
-            sound="minuet"
+            sound="minuet",
+            icon="https://cdn.jsdelivr.net/gh/yz1128/MyImageRepository@main/image/20260613092240368.png"
         )
 
         if result.get("code") == 200:
