@@ -1,6 +1,6 @@
 # Bark Notify Hook - 自动推送通知
 
-会话结束时**自动**发送 Bark 推送到你的 iPhone/iPad。
+Claude 完成回复时**自动**发送 Bark 推送到你的 iPhone/iPad。
 
 ## 快速开始
 
@@ -37,26 +37,28 @@ ln -s bark-notification-plugin/skill-hook bark-notify-hook
 
 ### 4. 完成！
 
-现在每次对话结束时，你的 iPhone 会自动收到推送！
+现在每次 Claude 完成回复时，你的 iPhone 会自动收到推送！
+
+**注意**：需要重启 Claude Code 才能让 hook 配置生效。
 
 ## 命令
 
-- `/bark-notify-hook install` - 安装 SessionEnd hook
+- `/bark-notify-hook install` - 安装 Stop hook
 - `/bark-notify-hook uninstall` - 卸载 hook
 - `/bark-notify-hook test` - 测试推送
 - `/bark-notify-hook status` - 查看状态
 
 ## 工作原理
 
-1. **安装时**：在 `~/.claude/settings.json` 中添加 `hooks.SessionEnd` 配置
-2. **会话结束时**：Claude Code 自动执行 `hook.py` 脚本
+1. **安装时**：在 `~/.claude/settings.json` 中添加 `hooks.Stop` 配置
+2. **回复完成时**：Claude Code 在主代理完成响应时自动执行 `hook.py` 脚本
 3. **推送发送**：脚本调用 Bark API 发送推送到你的设备
 
 ## 文件说明
 
 - `SKILL.md` - 完整文档
 - `run.py` - Skill 入口（安装/卸载/测试）
-- `hook.py` - SessionEnd hook 脚本
+- `hook.py` - Stop hook 脚本（每次 Claude 回复完成时触发）
 - `bark_send.py` - Bark API 核心实现
 
 ## 自定义
@@ -79,8 +81,9 @@ result = send_bark(
 
 | 特性 | bark-notify | bark-notify-hook |
 |------|-------------|------------------|
-| 触发方式 | 手动 `/bark-notify` | 自动（SessionEnd） |
-| 使用场景 | 需要控制何时推送 | 每次对话结束都推送 |
+| 触发方式 | 手动 `/bark-notify` | 自动（Stop hook） |
+| 触发时机 | 用户手动调用时 | 每次 Claude 回复完成时 |
+| 使用场景 | 需要控制何时推送 | 希望实时获知 Claude 回复 |
 | 配置 | 无需配置 | 需要安装 hook |
 
 ## License

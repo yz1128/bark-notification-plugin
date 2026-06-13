@@ -1,17 +1,17 @@
 ---
 name: bark-notify-hook
-description: Automatically send iOS Bark push notifications when Claude Code sessions end. Auto-installs SessionEnd hook on first use.
+description: Automatically send iOS Bark push notifications when Claude completes responses. Auto-installs Stop hook on first use.
 ---
 
 # Bark Notify Hook - 自动推送通知
 
 ## 概述
 
-在 Claude Code 会话结束时**自动**发送 Bark 推送通知到你的 iPhone/iPad，无需手动调用。
+在 Claude Code 完成回复时**自动**发送 Bark 推送通知到你的 iPhone/iPad，无需手动调用。
 
 ## 功能特性
 
-- 🔔 会话结束时自动推送到 iPhone/iPad
+- 🔔 每次 Claude 回复完成时自动推送到 iPhone/iPad
 - 🎯 零配置，首次使用自动安装 hook
 - 🔧 支持自定义标题、分组、铃声
 - 🧹 一键卸载，干净删除所有配置
@@ -45,17 +45,19 @@ description: Automatically send iOS Bark push notifications when Claude Code ses
 
 ### 3. 完成
 
-现在每次对话结束时，你的 iPhone 会自动收到推送通知！
+现在每次 Claude 完成回复时，你的 iPhone 会自动收到推送通知！
+
+**重要**：修改配置后需要重启 Claude Code 才能生效。
 
 ## 命令
 
 ### `/bark-notify-hook install`
 
-安装 SessionEnd hook 到 `~/.claude/settings.json`
+安装 Stop hook 到 `~/.claude/settings.json`
 
 **功能：**
 - 自动备份现有 settings.json
-- 添加 SessionEnd hook 配置
+- 添加 Stop hook 配置
 - 验证配置是否成功
 
 **示例：**
@@ -65,7 +67,7 @@ description: Automatically send iOS Bark push notifications when Claude Code ses
 
 ### `/bark-notify-hook uninstall`
 
-卸载 SessionEnd hook
+卸载 Stop hook
 
 **功能：**
 - 从 settings.json 中移除 hook 配置
@@ -146,8 +148,8 @@ result = send_bark(
 
 ## 工作原理
 
-1. **安装时**：在 `~/.claude/settings.json` 中添加 `hooks.SessionEnd` 配置
-2. **会话结束时**：Claude Code 自动执行 `hook.py` 脚本
+1. **安装时**：在 `~/.claude/settings.json` 中添加 `hooks.Stop` 配置
+2. **回复完成时**：Claude Code 在主代理完成响应时自动执行 `hook.py` 脚本
 3. **推送发送**：脚本调用 Bark API 发送推送到你的设备
 
 ## Hook 配置示例
@@ -157,7 +159,7 @@ result = send_bark(
 ```json
 {
   "hooks": {
-    "SessionEnd": [
+    "Stop": [
       {
         "hooks": [
           {
@@ -205,8 +207,8 @@ result = send_bark(
 
 | 特性 | bark-notify | bark-notify-hook |
 |------|-------------|------------------|
-| 触发方式 | 手动调用 `/bark-notify` | 自动触发（SessionEnd） |
-| 使用场景 | 需要明确控制何时推送 | 希望每次对话结束都推送 |
+| 触发方式 | 手动调用 `/bark-notify` | 自动触发（Stop hook） |
+| 使用场景 | 需要明确控制何时推送 | 希望每次回复完成都推送 |
 | 配置复杂度 | 无需配置，直接使用 | 需要安装 hook |
 | 推送内容 | 自定义标题和内容 | 固定标题，可修改 |
 

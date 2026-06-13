@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Bark Notify Hook Skill Runner
-自动安装/卸载 SessionEnd hook
+自动安装/卸载 Stop hook
 """
 
 import os
@@ -27,9 +27,9 @@ HOOK_USER_INPUT = "python ~/.claude/skills/bark-notify-hook/hook_user_input.py"
 
 # 所有需要安装的 hooks
 HOOKS_CONFIG = {
-    "SessionEnd": {
+    "Stop": {
         "command": HOOK_SESSION_END,
-        "description": "会话结束"
+        "description": "回复完成"
     },
     "PermissionRequest": {
         "command": HOOK_PERMISSION,
@@ -155,7 +155,7 @@ def install_hook():
         print("✅ Hooks 安装成功！")
         print("")
         print("功能说明：")
-        print("  📱 会话结束时 → 自动发送完成通知")
+        print("  📱 回复完成时 → 自动发送完成通知")
         print("  ⚠️  权限请求时 → 紧急提醒需要确认")
         print("  💬 需要输入时 → 提醒返回终端回答")
         print("")
@@ -312,7 +312,7 @@ def show_status():
     all_installed = all(installed.values())
     if all_installed and device_key:
         print("✅ 一切就绪！")
-        print("   📱 会话结束时 → 自动推送")
+        print("   📱 回复完成时 → 自动推送")
         print("   ⚠️  权限请求时 → 紧急提醒")
         print("   💬 需要输入时 → 提醒返回")
     elif all_installed and not device_key:
@@ -331,7 +331,7 @@ def main():
         print("📱 Bark Notify Hook - 自动推送通知")
         print("")
         print("用法:")
-        print("  /bark-notify-hook install   - 安装所有 hooks（会话结束 + 权限请求 + 用户输入）")
+        print("  /bark-notify-hook install   - 安装所有 hooks（回复完成 + 权限请求 + 用户输入）")
         print("  /bark-notify-hook uninstall - 卸载所有 hooks")
         print("  /bark-notify-hook test      - 测试推送")
         print("  /bark-notify-hook status    - 查看状态")
