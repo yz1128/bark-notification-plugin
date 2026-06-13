@@ -293,33 +293,34 @@ result = send_bark(
 
 ## 故障排查
 
-### 没有收到推送？
+### 问题诊断流程
 
-1. **检查 device key**
-   ```bash
-   echo $BARK_DEVICE_KEY
-   ```
+按以下三段式处理故障：**触发条件 → 一线修复 → 仍失败兜底**
 
-2. **测试推送**
-   ```
-   /bark-notify-hook test
-   ```
+| 症状 | 一线修复 | 仍失败则 |
+|------|----------|----------|
+| **没有收到推送** | 1. 检查 BARK_DEVICE_KEY 是否配置：`echo $BARK_DEVICE_KEY`<br>2. 运行测试命令：`/bark-notify-hook test` | 1. 检查手机网络连接<br>2. 访问 https://api.day.app 确认 Bark 服务正常<br>3. 尝试在 Bark App 中手动发送测试 |
+| **Hook 未触发** | 1. 运行 `/bark-notify-hook status` 检查安装状态<br>2. 确认 settings.json 中 hook 配置存在<br>3. 完全退出并重启 Claude Code | 1. 手动运行 hook 脚本测试：<br>`echo '{"session_id":"test"}' \| python ~/.claude/skills/bark-notify-hook/hook_stop.py`<br>2. 检查脚本是否有执行权限<br>3. 查看 Python 版本是否 ≥ 3.7 |
+| **推送内容错误** | 1. 检查是否修改过 hook 脚本<br>2. 对比 GitHub 仓库的原始版本<br>3. 重启 Claude Code | 1. 删除并重新安装 skill<br>2. 清空 settings.json 中的 hook 配置重新安装 |
+| **收到重复推送** | 1. 运行 `/bark-notify-hook status` 查看是否重复安装<br>2. 检查 settings.json 中 hook 配置是否有重复条目 | 1. 运行 `/bark-notify-hook uninstall`<br>2. 手动编辑 settings.json 删除重复的 hook 配置<br>3. 重新运行 `/bark-notify-hook install` |
+| **Python 导入错误** | 1. 确认 Python 3.7+ 已安装<br>2. 检查 bark_send.py 是否存在于 skill 目录 | 1. 完整重新 clone skill 仓库<br>2. 确认没有破坏 skill 目录结构<br>3. 尝试手动运行：`python -c "from bark_send import send_bark"` |
 
-3. **检查 hook 状态**
-   ```
-   /bark-notify-hook status
-   ```
+### 快速诊断命令
 
-4. **手动测试 hook 脚本**
-   ```bash
-   python ~/.claude/skills/bark-notify-hook/hook.py "测试消息"
-   ```
+```bash
+# 检查环境
+echo $BARK_DEVICE_KEY
+python --version
 
-### Hook 未触发？
+# 检查文件
+ls -la ~/.claude/skills/bark-notify-hook/
 
-- 确认 settings.json 中 hook 配置正确
-- 重启 Claude Code
-- 检查 hook_stop.py 脚本是否存在且有执行权限
+# 手动测试脚本
+echo '{"session_id":"test-123"}' | python ~/.claude/skills/bark-notify-hook/hook_stop.py
+
+# 查看配置
+cat ~/.claude/settings.json | grep -A 20 '"hooks"'
+```
 
 ## 常见错误与避免方法
 
