@@ -245,21 +245,23 @@ result = send_bark(
 ```
 
 **常用铃声：**
-- `minuet` - 默认，轻柔（用于任务完成）
-- `bell` - 清脆，适合提醒（用于等待输入）
-- `alarm` - 紧急，适合警告（用于权限请求）
-- `chime` - 柔和提醒
+- `minuet` - 默认（任务完成时使用）
+- `bell` - 清脆（等待输入时使用）
+- `alarm` - 紧急（权限请求时使用）
+- `chime` - 柔和（一般提醒）
 
-**常用分组：**
-- `claude` - 默认，AI 对话通知
-- `claude-permission` - 权限请求
-- `claude-input` - 用户输入请求
-- `work` - 工作相关
-- `personal` - 个人事务
+**分组说明：**
+- `claude` - 任务完成通知（默认）
+- `claude-permission` - 权限请求（hook_permission.py 使用）
+- `claude-input` - 用户输入请求（hook_user_input.py 使用）
+- `work` - 工作相关自定义分组
+- `personal` - 个人事务自定义分组
 
-**图标：**
-- 默认使用 Claude 官方图标（jsdelivr CDN）
-- 可以替换为任何公开的图片 URL
+**图标设置：**
+- 默认图标：`https://cdn.jsdelivr.net/gh/yz1128/MyImageRepository@main/image/20260613092240368.png`
+- 替换方法：修改 `send_bark()` 调用中的 `icon` 参数为任何公开图片 URL
+- 图片格式：支持 PNG、JPG、WebP（推荐 PNG）
+- 图片大小：建议 512x512 或 1024x1024
 
 ## 工作原理
 
