@@ -104,6 +104,11 @@ Which option do you prefer?
 - 添加 Stop hook 配置
 - 验证配置是否成功
 
+🔴 **CHECKPOINT：安装前请确认**
+- 已获取有效的 BARK_DEVICE_KEY
+- 已在 settings.json 的 env 中配置 BARK_DEVICE_KEY
+- Python 3.7+ 可用（运行 `python --version` 检查）
+
 **示例：**
 ```
 /bark-notify-hook install
@@ -117,6 +122,11 @@ Which option do you prefer?
 - 从 settings.json 中移除 hook 配置
 - 保留其他配置不变
 - 自动备份
+
+🔴 **CHECKPOINT：卸载前请确认**
+- 确认不再需要自动推送通知
+- 理解卸载后需要手动调用才能推送
+- 如需临时禁用，可以注释 settings.json 中的 hook 配置而非完全卸载
 
 **示例：**
 ```
@@ -152,6 +162,11 @@ Which option do you prefer?
 ```
 
 ## 自定义配置
+
+🔴 **CHECKPOINT：修改前必读**
+- 修改任何 hook 脚本后必须重启 Claude Code 才能生效
+- 建议先备份原始脚本：`cp hook_stop.py hook_stop.py.bak`
+- 语法错误会导致 hook 静默失败，修改后务必测试
 
 ### 修改推送格式
 
