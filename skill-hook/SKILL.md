@@ -67,36 +67,61 @@ Which option do you prefer?
 
 ## 快速开始
 
-### 1. 安装
+### Step 1: 获取 Bark Device Key
 
-通过 Claude Code 安装此 skill：
+**输入：** 你的 iPhone/iPad 上已安装 Bark App
 
-```bash
-# 使用 /bark-notify-hook install 首次安装
-```
+**操作：**
+1. 打开 Bark App
+2. 查看顶部测试 URL，格式为：`https://api.day.app/ABC123/test`
+3. 复制其中的 key 部分（`ABC123`）
 
-### 2. 配置 Device Key
+**输出：** 一串唯一的 device key（如 `eUt43wGYCe6YpDWMiRxPgX`）
 
-在 `~/.claude/settings.json` 的 `env` 中添加：
+---
+
+### Step 2: 配置 Device Key
+
+**输入：** 上一步获取的 device key
+
+**操作：**
+编辑 `~/.claude/settings.json`，在 `env` 中添加：
 
 ```json
 {
   "env": {
-    "BARK_DEVICE_KEY": "your_device_key_here"
+    "BARK_DEVICE_KEY": "你的_device_key"
   }
 }
 ```
 
-获取 device key：
-1. 打开 Bark App
-2. 复制测试 URL 中的 key
-3. 例如：`https://api.day.app/ABC123/test` → key 为 `ABC123`
+**输出：** settings.json 文件已保存，包含 BARK_DEVICE_KEY 配置
 
-### 3. 完成
+---
 
-现在每次 Claude 完成回复时，你的 iPhone 会自动收到推送通知！
+### Step 3: 安装 Hook
 
-**重要**：修改配置后需要重启 Claude Code 才能生效。
+**输入：** 在 Claude Code 对话中输入
+
+**操作：**
+```
+/bark-notify-hook install
+```
+
+**输出：** 
+```
+✅ Hook 安装成功
+📄 配置文件: /Users/你/.claude/settings.json
+🪝 已添加 3 个 hooks: Stop, PermissionRequest, Elicitation
+```
+
+---
+
+### Step 4: 重启生效
+
+**操作：** 完全退出 Claude Code，再重新启动
+
+**输出：** 现在每次 Claude 完成回复时，你的 iPhone 会自动收到推送通知！
 
 ## 命令
 
