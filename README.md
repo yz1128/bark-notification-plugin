@@ -249,8 +249,6 @@ bark-notify-skill/
 ├── hermes-plugin/              # ⭐ Hermes Agent Plugin Hook
 │   ├── plugin.yaml            # 插件配置
 │   └── __init__.py            # 主代码（带 Hermes 图标）
-├── skill/                      # 手动推送模式（已废弃）
-├── __init__.py                 # Python Plugin Hook（已废弃）
 ├── barkApi.md                  # Bark API 完整文档
 └── README.md                   # 本文件
 ```

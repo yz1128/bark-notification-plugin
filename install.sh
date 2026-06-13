@@ -20,12 +20,12 @@ echo ""
 
 # 获取项目目录
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_SRC="$SCRIPT_DIR/skill"
-SKILL_DEST="$CLAUDE_SKILLS_DIR/bark-notify"
+SKILL_SRC="$SCRIPT_DIR/skill-hook"
+SKILL_DEST="$CLAUDE_SKILLS_DIR/bark-notify-hook"
 
 # 检查 skill 源目录
 if [ ! -d "$SKILL_SRC" ]; then
-    echo "❌ 错误: skill 目录不存在: $SKILL_SRC"
+    echo "❌ 错误: skill-hook 目录不存在: $SKILL_SRC"
     exit 1
 fi
 
@@ -60,7 +60,7 @@ case "$INSTALL_METHOD" in
 esac
 
 echo ""
-echo "✅ Bark Notify Skill 安装成功！"
+echo "✅ Bark Notify Hook 安装成功！"
 echo ""
 
 # 检查环境变量
@@ -70,7 +70,8 @@ if [ -f "$SETTINGS_FILE" ]; then
         echo "✅ 检测到 BARK_DEVICE_KEY 已配置"
         echo ""
         echo "🎉 安装完成！现在可以使用："
-        echo "   /bark-notify \"测试推送\""
+        echo "   /bark-notify-hook install"
+        echo "   /bark-notify-hook test"
     else
         echo "⚠️  未检测到 BARK_DEVICE_KEY 配置"
         echo ""

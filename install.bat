@@ -20,12 +20,12 @@ echo.
 
 REM 获取脚本目录
 set SCRIPT_DIR=%~dp0
-set SKILL_SRC=%SCRIPT_DIR%skill
-set SKILL_DEST=%CLAUDE_SKILLS_DIR%\bark-notify
+set SKILL_SRC=%SCRIPT_DIR%skill-hook
+set SKILL_DEST=%CLAUDE_SKILLS_DIR%\bark-notify-hook
 
 REM 检查 skill 源目录
 if not exist "%SKILL_SRC%" (
-    echo ❌ 错误: skill 目录不存在: %SKILL_SRC%
+    echo ❌ 错误: skill-hook 目录不存在: %SKILL_SRC%
     pause
     exit /b 1
 )
@@ -64,7 +64,7 @@ if "%INSTALL_METHOD%"=="1" (
 )
 
 echo.
-echo ✅ Bark Notify Skill 安装成功！
+echo ✅ Bark Notify Hook 安装成功！
 echo.
 
 REM 检查环境变量
@@ -75,7 +75,8 @@ if exist "%SETTINGS_FILE%" (
         echo ✅ 检测到 BARK_DEVICE_KEY 已配置
         echo.
         echo 🎉 安装完成！现在可以使用：
-        echo    /bark-notify "测试推送"
+        echo    /bark-notify-hook install
+        echo    /bark-notify-hook test
     ) else (
         echo ⚠️  未检测到 BARK_DEVICE_KEY 配置
         echo.
