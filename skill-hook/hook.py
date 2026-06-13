@@ -30,25 +30,35 @@ def main():
     try:
         hook_data = json.load(sys.stdin)
         hook_event = hook_data.get("hook_event_name", "unknown")
-        session_id = hook_data.get("session_id", "")
 
         # 提取项目目录作为上下文
         cwd = hook_data.get("cwd", "")
-        project_name = os.path.basename(cwd) if cwd else "Claude"
+        project_name = os.path.basename(cwd) if cwd else "ClaudeCode"
+
+        # 获取最后一条消息作为 session 名称
+        last_message = hook_data.get("last_assistant_message", "")
+
+        # 截取前50个字符作为任务描述
+        task_desc = ""
+        if last_message:
+            # 提取第一行或前50个字符
+            first_line = last_message.split('\n')[0]
+            task_desc = first_line[:50] + "..." if len(first_line) > 50 else first_line
+
+        if not task_desc:
+            task_desc = "任务处理中"
 
     except (json.JSONDecodeError, Exception):
         # 如果没有 JSON 输入，使用默认值
         hook_event = "unknown"
-        project_name = "Claude"
+        project_name = "ClaudeCode"
+        task_desc = "任务处理中"
 
-    # 标题
-    title = f"{project_name} 任务完成"
+    # 标题：当前 agent 名称
+    title = project_name
 
-    # 内容：从命令行参数获取，或使用默认
-    if len(sys.argv) > 1:
-        body = " ".join(sys.argv[1:])
-    else:
-        body = "✅ 任务已完成，可以查看结果"
+    # 内容：会话名称 + 状态
+    body = f"🤖 {task_desc}\n✅ 任务完成"
 
     # 发送推送
     try:

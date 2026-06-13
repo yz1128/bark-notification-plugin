@@ -10,7 +10,7 @@ import sys
 import json
 
 # 获取 skill 目录
-SKILL_DIR = os.path.expanduser("~/.claude/skills/bark-notify-hook")
+SKILL_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SKILL_DIR)
 
 try:
@@ -32,24 +32,25 @@ def main():
 
         # 提取项目目录作为上下文
         cwd = hook_data.get("cwd", "")
-        project_name = os.path.basename(cwd) if cwd else "Claude"
+        project_name = os.path.basename(cwd) if cwd else "ClaudeCode"
 
         # 提取问题或提示信息（如果有）
         question = hook_data.get("question", "")
 
     except (json.JSONDecodeError, Exception):
         # 如果没有 JSON 输入，使用默认值
-        project_name = "Claude"
+        project_name = "ClaudeCode"
         question = ""
 
-    # 标题
-    title = f"💬 {project_name} 需要回答"
+    # 标题：Agent 名称
+    title = project_name
 
-    # 内容
+    # 内容：问题 + 状态
     if question:
-        body = f"Claude 正在等待你的输入\n\n问题: {question[:100]}\n\n请返回终端回答"
+        question_text = question[:50] + "..." if len(question) > 50 else question
+        body = f"💬 {question_text}\n⏸️ 等待输入"
     else:
-        body = f"Claude 正在等待你的输入\n\n请返回终端继续对话"
+        body = f"💬 需要回答\n⏸️ 等待输入"
 
     # 发送推送（使用提醒设置）
     try:
@@ -60,7 +61,8 @@ def main():
             group="claude-input",
             sound="bell",           # 使用清脆的铃声
             level="timeSensitive",  # 时效性通知
-            is_archive=0            # 不归档，需要立即处理
+            is_archive=0,           # 不归档，需要立即处理
+            icon="https://cdn.jsdelivr.net/gh/yz1128/MyImageRepository@main/image/20260613092240368.png"
         )
         if result.get("code") == 200:
             sys.exit(0)

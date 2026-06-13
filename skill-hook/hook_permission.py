@@ -10,7 +10,7 @@ import sys
 import json
 
 # 获取 skill 目录
-SKILL_DIR = os.path.expanduser("~/.claude/skills/bark-notify-hook")
+SKILL_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, SKILL_DIR)
 
 try:
@@ -35,18 +35,18 @@ def main():
 
         # 提取项目目录作为上下文
         cwd = hook_data.get("cwd", "")
-        project_name = os.path.basename(cwd) if cwd else "Claude"
+        project_name = os.path.basename(cwd) if cwd else "ClaudeCode"
 
     except (json.JSONDecodeError, Exception):
         # 如果没有 JSON 输入，使用默认值
         tool_name = "未知操作"
-        project_name = "Claude"
+        project_name = "ClaudeCode"
 
-    # 标题
-    title = f"⚠️ {project_name} 需要确认"
+    # 标题：Agent 名称
+    title = project_name
 
-    # 内容
-    body = f"Claude 正在等待你的权限确认\n\n操作: {tool_name}\n\n请返回终端处理"
+    # 内容：操作描述 + 状态
+    body = f"🔐 {tool_name}\n⚠️ 权限请求"
 
     # 发送推送（使用更紧急的设置）
     try:
@@ -57,7 +57,8 @@ def main():
             group="claude-permission",
             sound="alarm",          # 使用警报铃声
             level="timeSensitive",  # 时效性通知
-            is_archive=0            # 不归档，需要立即处理
+            is_archive=0,           # 不归档，需要立即处理
+            icon="https://cdn.jsdelivr.net/gh/yz1128/MyImageRepository@main/image/20260613092240368.png"
         )
         if result.get("code") == 200:
             sys.exit(0)
