@@ -82,14 +82,14 @@ ln -s bark-notification-plugin/skill-hook bark-notify-hook
 
 - `SKILL.md` - 完整文档
 - `run.py` - Skill 入口（安装/卸载/测试）
-- `hook.py` - Stop hook 脚本（任务完成时触发）
+- `hook_stop.py` - Stop hook 脚本（任务完成时触发）
 - `hook_permission.py` - PermissionRequest hook 脚本（权限请求时触发）
 - `hook_user_input.py` - Elicitation hook 脚本（等待输入时触发）
 - `bark_send.py` - Bark API 核心实现
 
 ## 自定义
 
-编辑 `hook.py` 修改推送标题、分组、铃声或图标：
+编辑 `hook_stop.py` 修改推送标题、分组、铃声或图标：
 
 ```python
 # 标题（默认：Claude Code）

@@ -21,14 +21,14 @@ if sys.platform == 'win32':
 
 SKILL_DIR = os.path.dirname(os.path.abspath(__file__))
 SETTINGS_FILE = os.path.expanduser("~/.claude/settings.json")
-HOOK_SESSION_END = "python ~/.claude/skills/bark-notify-hook/hook.py"
+HOOK_STOP = "python ~/.claude/skills/bark-notify-hook/hook_stop.py"
 HOOK_PERMISSION = "python ~/.claude/skills/bark-notify-hook/hook_permission.py"
 HOOK_USER_INPUT = "python ~/.claude/skills/bark-notify-hook/hook_user_input.py"
 
 # 所有需要安装的 hooks
 HOOKS_CONFIG = {
     "Stop": {
-        "command": HOOK_SESSION_END,
+        "command": HOOK_STOP,
         "description": "回复完成"
     },
     "PermissionRequest": {
@@ -305,7 +305,7 @@ def show_status():
     print("")
     print("配置文件: " + SETTINGS_FILE)
     print("Hook 脚本:")
-    print("  - " + os.path.join(SKILL_DIR, "hook.py"))
+    print("  - " + os.path.join(SKILL_DIR, "hook_stop.py"))
     print("  - " + os.path.join(SKILL_DIR, "hook_permission.py"))
     print("  - " + os.path.join(SKILL_DIR, "hook_user_input.py"))
     print("")

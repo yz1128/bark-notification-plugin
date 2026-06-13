@@ -157,7 +157,7 @@ Which option do you prefer?
 
 编辑对应的 hook 脚本来修改推送格式：
 
-**hook.py（任务完成）**：
+**hook_stop.py（任务完成）**：
 ```python
 # 标题（默认：Claude Code）
 title = "Claude Code"
@@ -247,7 +247,7 @@ result = send_bark(
         "hooks": [
           {
             "type": "command",
-            "command": "python ~/.claude/skills/bark-notify-hook/hook.py"
+            "command": "python ~/.claude/skills/bark-notify-hook/hook_stop.py"
           }
         ]
       }
