@@ -21,9 +21,11 @@ if sys.platform == 'win32':
 
 SKILL_DIR = os.path.dirname(os.path.abspath(__file__))
 SETTINGS_FILE = os.path.expanduser("~/.claude/settings.json")
-HOOK_STOP = "python ~/.claude/skills/bark-notify-hook/hook_stop.py"
-HOOK_PERMISSION = "python ~/.claude/skills/bark-notify-hook/hook_permission.py"
-HOOK_USER_INPUT = "python ~/.claude/skills/bark-notify-hook/hook_user_input.py"
+
+# 使用绝对路径，确保跨平台兼容
+HOOK_STOP = f"python {os.path.join(SKILL_DIR, 'hook_stop.py')}"
+HOOK_PERMISSION = f"python {os.path.join(SKILL_DIR, 'hook_permission.py')}"
+HOOK_USER_INPUT = f"python {os.path.join(SKILL_DIR, 'hook_user_input.py')}"
 
 # 所有需要安装的 hooks
 HOOKS_CONFIG = {
